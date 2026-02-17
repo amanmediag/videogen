@@ -359,8 +359,11 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                         <button
                           onClick={() => saveScript(msg.content)}
                           disabled={savingScript}
-                          className="self-start px-3 py-1 bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 disabled:cursor-not-allowed text-zinc-300 text-xs rounded-lg transition-colors"
+                          className="self-start mt-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
                         >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                          </svg>
                           {savingScript ? "Saving..." : "Save as Script"}
                         </button>
                       )}
