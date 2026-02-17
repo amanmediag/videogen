@@ -2,8 +2,13 @@ import { checkCredits } from "@/lib/kie";
 
 export async function GET() {
   try {
-    const credits = await checkCredits();
-    return new Response(JSON.stringify(credits), {
+    const response = await checkCredits();
+    // kie.ai returns { code, msg, data } where data is the balance
+    const balance = typeof response === 'object' && 'data' in response
+      ? (response as { data: number }).data
+      : response;
+
+    return new Response(JSON.stringify({ balance }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
