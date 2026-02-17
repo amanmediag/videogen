@@ -12,6 +12,12 @@ interface Project {
   updatedAt: string;
 }
 
+interface Credits {
+  balance: number;
+  used: number;
+  total: number;
+}
+
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,10 +25,24 @@ export default function Home() {
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectIdea, setNewProjectIdea] = useState("");
   const [creating, setCreating] = useState(false);
+  const [credits, setCredits] = useState<Credits | null>(null);
 
   useEffect(() => {
     fetchProjects();
+    fetchCredits();
   }, []);
+
+  async function fetchCredits() {
+    try {
+      const res = await fetch("/api/credits");
+      if (res.ok) {
+        const data = await res.json();
+        setCredits(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch credits:", error);
+    }
+  }
 
   async function fetchProjects() {
     try {
@@ -99,15 +119,27 @@ export default function Home() {
             </div>
             <h1 className="text-xl font-semibold text-white">VideoGen</h1>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Project
-          </button>
+          <div className="flex items-center gap-4">
+            {credits && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800 rounded-lg">
+                <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472c.08-.185.167-.36.264-.521z" />
+                </svg>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-white">{credits.balance?.toFixed(2) ?? '—'} credits</span>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Project
+            </button>
+          </div>
         </div>
       </header>
 
