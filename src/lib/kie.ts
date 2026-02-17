@@ -21,7 +21,7 @@ function headers() {
 // Chat completions (Gemini via kie.ai)
 export async function chatCompletion(
   messages: KieChatMessage[],
-  model = "gemini-2-5-flash"
+  model = "gemini-3-pro"
 ): Promise<KieChatResponse> {
   const res = await fetch(`${BASE_URL}/${model}/v1/chat/completions`, {
     method: "POST",
@@ -50,7 +50,7 @@ export async function chatCompletion(
 // Streaming chat completions
 export async function chatCompletionStream(
   messages: KieChatMessage[],
-  model = "gemini-2-5-flash"
+  model = "gemini-3-pro"
 ): Promise<Response> {
   const res = await fetch(`${BASE_URL}/${model}/v1/chat/completions`, {
     method: "POST",
