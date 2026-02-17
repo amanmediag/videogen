@@ -44,18 +44,19 @@ model Script {
 }
 
 model StoryboardSection {
-  id            String   @id @default(cuid())
-  projectId     String
-  sectionNumber Int
-  description   String
-  prompt        String
-  imageUrl      String?
-  videoUrl      String?
+  id             String   @id @default(cuid())
+  projectId      String
+  sectionNumber  Int
+  description    String
+  visualPrompt   String
+  voiceover      String?
+  imageUrl       String?
+  videoUrl       String?
   localVideoPath String?
-  taskId        String?
-  status        String   @default("pending") // pending, generating, ready, approved
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  taskId         String?
+  status         String   @default("pending") // pending, generating, ready, approved
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
