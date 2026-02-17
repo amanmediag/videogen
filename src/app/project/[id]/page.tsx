@@ -236,21 +236,28 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: id,
-          type: "video",
+          model: "sora-2-text-to-video",
           sectionId,
           input: {
             prompt,
-            aspect_ratio: "portrait",
+            aspect_ratio: "9:16",
+            duration: 15,
           },
         }),
       });
 
       if (res.ok) {
         await fetchProject();
-      await fetchCredits();
+        await fetchCredits();
+        setActiveTab("videos");
+      } else {
+        const error = await res.json();
+        console.error("Video generation failed:", error);
+        alert(`Failed to generate video: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Failed to create video task:", error);
+      alert("Failed to create video task");
     }
   }
 
@@ -521,8 +528,11 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-white">Storyboard</h2>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-white">Storyboard</h2>
+                    <span className="text-sm text-zinc-400">{project.storyboardSections.length} sections (15s each)</span>
+                  </div>
+                  <div className="space-y-4">
                     {project.storyboardSections
                       .sort((a, b) => a.sectionNumber - b.sectionNumber)
                       .map((section) => (
@@ -530,52 +540,82 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                           key={section.id}
                           className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden"
                         >
-                          <div className="aspect-video bg-zinc-800 flex items-center justify-center">
-                            {section.videoUrl ? (
-                              <video
-                                src={section.videoUrl}
-                                controls
-                                className="w-full h-full object-cover"
-                              />
-                            ) : section.imageUrl ? (
-                              <img
-                                src={section.imageUrl}
-                                alt={`Section ${section.sectionNumber}`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-center text-zinc-500">
-                                <svg className="w-12 h-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                <p className="text-sm">No video</p>
+                          <div className="flex flex-col lg:flex-row">
+                            {/* Video/Preview */}
+                            <div className="lg:w-80 flex-shrink-0">
+                              <div className="aspect-video bg-zinc-800 flex items-center justify-center">
+                                {section.videoUrl ? (
+                                  <video
+                                    src={section.videoUrl}
+                                    controls
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : section.imageUrl ? (
+                                  <img
+                                    src={section.imageUrl}
+                                    alt={`Section ${section.sectionNumber}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="text-center text-zinc-500">
+                                    <svg className="w-12 h-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <p className="text-sm">15s clip</p>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          <div className="p-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-zinc-400">
-                                Section {section.sectionNumber}
-                              </span>
-                              <span className={`text-xs ${
-                                section.status === "ready" ? "text-green-400" :
-                                section.status === "generating" ? "text-blue-400" :
-                                "text-zinc-500"
-                              }`}>
-                                {section.status}
-                              </span>
                             </div>
-                            <p className="text-sm text-zinc-300 line-clamp-2 mb-3">
-                              {section.description}
-                            </p>
-                            {!section.videoUrl && section.status !== "generating" && (
-                              <button
-                                onClick={() => generateVideo(section.id, section.visualPrompt)}
-                                className="w-full px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-lg transition-colors"
-                              >
-                                Generate Video
-                              </button>
-                            )}
+
+                            {/* Content */}
+                            <div className="flex-1 p-4 lg:p-6">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="px-3 py-1 bg-violet-600/20 text-violet-400 rounded-full text-sm font-medium">
+                                    Section {section.sectionNumber}
+                                  </span>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${
+                                    section.status === "ready" ? "bg-green-600/20 text-green-400" :
+                                    section.status === "generating" ? "bg-blue-600/20 text-blue-400" :
+                                    "bg-zinc-700 text-zinc-400"
+                                  }`}>
+                                    {section.status}
+                                  </span>
+                                </div>
+                                {!section.videoUrl && section.status !== "generating" && (
+                                  <button
+                                    onClick={() => generateVideo(section.id, section.visualPrompt)}
+                                    className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Generate 15s Video
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Description */}
+                              <div className="mb-4">
+                                <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-1">Scene Description</h4>
+                                <p className="text-sm text-zinc-300">{section.description}</p>
+                              </div>
+
+                              {/* Visual Prompt */}
+                              <div className="mb-4">
+                                <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-1">Visual Prompt (Sora 2)</h4>
+                                <p className="text-sm text-zinc-400 bg-zinc-800 rounded-lg p-3 font-mono">{section.visualPrompt}</p>
+                              </div>
+
+                              {/* Voiceover */}
+                              {section.voiceover && (
+                                <div>
+                                  <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-1">Voiceover / Dialogue</h4>
+                                  <p className="text-sm text-zinc-300 italic">&ldquo;{section.voiceover}&rdquo;</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
