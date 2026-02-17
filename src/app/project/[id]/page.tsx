@@ -247,9 +247,11 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
       });
 
       if (res.ok) {
+        const task = await res.json();
         await fetchProject();
         await fetchCredits();
-        setActiveTab("videos");
+        // Start polling for this task
+        pollTaskUntilComplete(task.kieTaskId);
       } else {
         const error = await res.json();
         console.error("Video generation failed:", error);
@@ -259,6 +261,31 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
       console.error("Failed to create video task:", error);
       alert("Failed to create video task");
     }
+  }
+
+  async function pollTaskUntilComplete(taskId: string) {
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/tasks/${taskId}`);
+        if (res.ok) {
+          const task = await res.json();
+          await fetchProject();
+
+          // Keep polling if still in progress
+          if (task.status === "waiting" || task.status === "queuing" || task.status === "generating") {
+            setTimeout(poll, 5000); // Poll every 5 seconds
+          } else {
+            // Task complete - refresh credits
+            await fetchCredits();
+          }
+        }
+      } catch (error) {
+        console.error("Failed to poll task:", error);
+      }
+    };
+
+    // Start polling after a short delay
+    setTimeout(poll, 3000);
   }
 
   async function pollTaskStatus(taskId: string) {

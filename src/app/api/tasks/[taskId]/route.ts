@@ -55,5 +55,23 @@ export async function GET(
     },
   });
 
+  // Update linked storyboard section if task completed
+  if (state === "success" && resultUrl) {
+    await prisma.storyboardSection.updateMany({
+      where: { taskId },
+      data: {
+        videoUrl: resultUrl,
+        status: "ready",
+      },
+    });
+  } else if (state === "fail") {
+    await prisma.storyboardSection.updateMany({
+      where: { taskId },
+      data: {
+        status: "failed",
+      },
+    });
+  }
+
   return NextResponse.json(updated);
 }

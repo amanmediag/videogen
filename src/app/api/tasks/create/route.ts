@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { generateVideo, createTask } from "@/lib/kie";
 
 export async function POST(req: NextRequest) {
-  const { projectId, model, input } = await req.json();
+  const { projectId, model, input, sectionId } = await req.json();
 
   if (!projectId || !model || !input) {
     return NextResponse.json(
@@ -29,15 +29,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const kieTaskId = result.data.taskId;
+
   // Save task to DB
   const task = await prisma.task.create({
     data: {
       projectId,
-      kieTaskId: result.data.taskId,
+      kieTaskId,
       model,
       status: "waiting",
     },
   });
+
+  // Link task to storyboard section if provided
+  if (sectionId) {
+    await prisma.storyboardSection.update({
+      where: { id: sectionId },
+      data: {
+        taskId: kieTaskId,
+        status: "generating",
+      },
+    });
+  }
 
   return NextResponse.json(task, { status: 201 });
 }
