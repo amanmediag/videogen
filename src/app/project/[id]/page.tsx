@@ -240,7 +240,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
           sectionId,
           input: {
             prompt,
-            aspect_ratio: "9:16",
+            aspect_ratio: "portrait",
             duration: 15,
           },
         }),
