@@ -159,7 +159,7 @@ export default function V2StudioPage() {
         taskId: project.videoTaskId || "",
         state: "success",
         progress: 100,
-        resultUrl: project.videoLocalPath || project.videoUrl,
+        resultUrl: project.videoUrl || project.videoLocalPath,
       });
     }
     if (project.nextVideoUrl || project.nextVideoLocalPath) {
@@ -167,7 +167,7 @@ export default function V2StudioPage() {
         taskId: project.nextVideoTaskId || "",
         state: "success",
         progress: 100,
-        resultUrl: project.nextVideoLocalPath || project.nextVideoUrl,
+        resultUrl: project.nextVideoUrl || project.nextVideoLocalPath,
       });
     }
 
@@ -527,9 +527,9 @@ export default function V2StudioPage() {
                     <div className="flex items-start gap-4">
                       {/* Thumbnail */}
                       <div className="w-24 h-16 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
-                        {(project.videoLocalPath || project.videoUrl) ? (
+                        {(project.videoUrl || project.videoLocalPath) ? (
                           <video
-                            src={project.videoLocalPath || project.videoUrl!}
+                            src={project.videoUrl || project.videoLocalPath!}
                             className="w-full h-full object-cover"
                             muted
                           />
@@ -764,7 +764,7 @@ export default function V2StudioPage() {
                 {videoStatus.state === "success" && (videoStatus.resultUrl || videoLocalPath) && (
                   <div className="space-y-4">
                     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                      <video src={videoLocalPath || videoStatus.resultUrl!} controls className="w-full max-h-[500px]" />
+                      <video src={videoUrl || videoStatus.resultUrl || videoLocalPath} controls className="w-full max-h-[500px]" />
                     </div>
                     {videoLocalPath && <p className="text-xs text-zinc-500">Saved: {videoLocalPath}</p>}
                     <div className="flex gap-3">
@@ -1006,7 +1006,7 @@ export default function V2StudioPage() {
                     {nextVideoStatus.state === "success" && (nextVideoStatus.resultUrl || nextVideoLocalPath) && (
                       <div className="space-y-2">
                         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                          <video src={nextVideoLocalPath || nextVideoStatus.resultUrl!} controls className="w-full max-h-[500px]" />
+                          <video src={nextVideoUrl || nextVideoStatus.resultUrl || nextVideoLocalPath} controls className="w-full max-h-[500px]" />
                         </div>
                         {nextVideoLocalPath && <p className="text-xs text-zinc-500">Saved: {nextVideoLocalPath}</p>}
                       </div>
