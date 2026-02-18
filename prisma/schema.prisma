@@ -88,16 +88,19 @@ model Task {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
-model V2Session {
+model V2Project {
   id                  String   @id @default(cuid())
+  name                String
   situation           String
   prompt              String?
   videoTaskId         String?
   videoUrl            String?
   videoLocalPath      String?
   characterUsername   String?
+  characterPrompt    String?  // short one-liner: "cheerful barista, green apron, warm smile"
   characterTaskId     String?
   characterTimestamps String?
+  safetyInstruction   String?
   nextPrompt          String?
   nextVideoTaskId     String?
   nextVideoUrl        String?

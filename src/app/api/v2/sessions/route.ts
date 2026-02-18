@@ -1,36 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-// List all V2 sessions
+// List all V2 projects
 export async function GET() {
   try {
-    const sessions = await prisma.v2Session.findMany({
+    const projects = await prisma.v2Project.findMany({
       orderBy: { updatedAt: "desc" },
     });
-    return NextResponse.json(sessions);
+    return NextResponse.json(projects);
   } catch (error) {
     console.error("[v2/sessions] Error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
 
-// Create a new V2 session
+// Create a new V2 project
 export async function POST(req: NextRequest) {
   try {
-    const { situation } = await req.json();
+    const { name, situation } = await req.json();
 
-    if (!situation) {
+    if (!name || !situation) {
       return NextResponse.json(
-        { error: "situation is required" },
+        { error: "name and situation are required" },
         { status: 400 }
       );
     }
 
-    const session = await prisma.v2Session.create({
-      data: { situation },
+    const project = await prisma.v2Project.create({
+      data: { name, situation },
     });
 
-    return NextResponse.json(session, { status: 201 });
+    return NextResponse.json(project, { status: 201 });
   } catch (error) {
     console.error("[v2/sessions] Error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
