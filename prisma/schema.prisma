@@ -87,3 +87,22 @@ model Task {
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
+
+model V2Session {
+  id                  String   @id @default(cuid())
+  situation           String
+  prompt              String?
+  videoTaskId         String?
+  videoUrl            String?
+  videoLocalPath      String?
+  characterUsername   String?
+  characterTaskId     String?
+  characterTimestamps String?
+  nextPrompt          String?
+  nextVideoTaskId     String?
+  nextVideoUrl        String?
+  nextVideoLocalPath  String?
+  step                String   @default("situation") // situation, prompt, video, character, next
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
