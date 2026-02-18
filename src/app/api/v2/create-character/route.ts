@@ -3,7 +3,7 @@ import { createCharacter } from "@/lib/kie";
 
 export async function POST(req: NextRequest) {
   try {
-    const { taskId, username, characterPrompt } = await req.json();
+    const { taskId, username, characterPrompt, timestamps = "1,4" } = await req.json();
 
     if (!taskId || !username || !characterPrompt) {
       return NextResponse.json(
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     const result = await createCharacter({
       origin_task_id: taskId,
-      timestamps: "0-15",
+      timestamps,
       character_prompt: characterPrompt,
       character_user_name: username,
     });

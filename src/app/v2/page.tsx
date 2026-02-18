@@ -31,6 +31,7 @@ export default function V2StudioPage() {
 
   // Step 4: Character
   const [characterUsername, setCharacterUsername] = useState("");
+  const [characterTimestamps, setCharacterTimestamps] = useState("1,4");
   const [creatingCharacter, setCreatingCharacter] = useState(false);
   const [characterTaskId, setCharacterTaskId] = useState("");
   const [characterStatus, setCharacterStatus] = useState<TaskStatus | null>(null);
@@ -141,6 +142,7 @@ export default function V2StudioPage() {
           taskId: videoTaskId,
           username: characterUsername.trim(),
           characterPrompt: situation.trim(),
+          timestamps: characterTimestamps.trim(),
         }),
       });
       if (!res.ok) {
@@ -472,6 +474,17 @@ export default function V2StudioPage() {
                   placeholder="e.g., driveway_dad_01"
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">Timestamps (start,end — 1-4s duration)</label>
+                <input
+                  type="text"
+                  value={characterTimestamps}
+                  onChange={(e) => setCharacterTimestamps(e.target.value)}
+                  placeholder="e.g., 1,4"
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+                <p className="text-xs text-zinc-500 mt-1">Pick a 1-4 second window where the character is clearly visible (e.g., 2,5 or 0.5,3.5)</p>
               </div>
               <button
                 onClick={handleCreateCharacter}
