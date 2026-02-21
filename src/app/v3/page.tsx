@@ -30,21 +30,15 @@ interface V3Project {
   updatedAt: string;
 }
 
-function generateCharacterName(prompt: string, existingNames: string[]): string {
+function generateCharacterName(prompt: string, videoIndex: number): string {
   const words = prompt
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, "")
     .split(/\s+/)
     .filter((w) => w.length > 2 && !["the", "and", "for", "with", "from", "that", "this"].includes(w))
     .slice(0, 3);
-  const base = words.length > 0 ? words.join("_") : "character";
-  let name = base;
-  let counter = 1;
-  while (existingNames.includes(name)) {
-    name = `${base}_${String(counter).padStart(2, "0")}`;
-    counter++;
-  }
-  return name;
+  const desc = words.length > 0 ? words.join("").toUpperCase() : "AVATAR";
+  return `${desc}_${String(videoIndex).padStart(4, "0")}`;
 }
 
 const MAX_VIDEOS = 5;
@@ -326,10 +320,8 @@ export default function V3WorkbenchPage() {
   async function createCharacterFromVideo(video: V3Video) {
     if (!activeProject || !video.taskId || video.status !== "success") return;
 
-    const existingNames = activeProject.videos
-      .filter((v) => v.characterName)
-      .map((v) => v.characterName!);
-    const name = generateCharacterName(video.prompt, existingNames);
+    const videoIndex = activeProject.videos.findIndex((v) => v.id === video.id) + 1;
+    const name = generateCharacterName(video.prompt, videoIndex);
 
     updateVideoLocal(video.id, { characterName: name, characterStatus: "creating", characterProgress: 0 });
     setShowCharacters(true);
@@ -747,12 +739,36 @@ export default function V3WorkbenchPage() {
                       </svg>
                       Create Character
                     </button>
+                  ) : previewVideo.characterStatus === "fail" ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-red-400 text-sm">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Character failed: @{previewVideo.characterName}
+                      </div>
+                      <button
+                        onClick={() => {
+                          updateVideoLocal(previewVideo.id, { characterName: null, characterTaskId: null, characterStatus: null, characterProgress: null });
+                          patchVideo(activeProject.id, previewVideo.id, { characterName: null, characterTaskId: null, characterStatus: null, characterProgress: null });
+                        }}
+                        className="w-full px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Retry Character
+                      </button>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-2 text-purple-400 text-sm">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Character: @{previewVideo.characterName}
+                      {previewVideo.characterStatus && previewVideo.characterStatus !== "success" && (
+                        <span className="text-xs text-zinc-500 capitalize">({previewVideo.characterStatus})</span>
+                      )}
                     </div>
                   )}
                 </div>
