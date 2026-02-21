@@ -52,7 +52,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await prisma.v3Project.delete({ where: { id } });
+    await prisma.v3Project.update({ where: { id }, data: { deletedAt: new Date() } });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[v3/projects/id] Error:", error);

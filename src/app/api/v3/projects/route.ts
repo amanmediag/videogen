@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 export async function GET() {
   try {
     const projects = await prisma.v3Project.findMany({
+      where: { deletedAt: null },
       orderBy: { updatedAt: "desc" },
       include: {
         videos: {

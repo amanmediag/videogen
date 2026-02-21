@@ -61,6 +61,9 @@ export default function V3WorkbenchPage() {
   const [draftDuration, setDraftDuration] = useState<"10" | "15">("15");
   const [showDraft, setShowDraft] = useState(false);
 
+  // Delete confirmation
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+
   // Character creation form
   const [charFormVideoId, setCharFormVideoId] = useState<string | null>(null);
   const [charName, setCharName] = useState("");
@@ -492,7 +495,7 @@ export default function V3WorkbenchPage() {
                           Open
                         </button>
                         <button
-                          onClick={() => deleteProject(project.id)}
+                          onClick={() => setDeletingProjectId(project.id)}
                           className="px-3 py-2 bg-zinc-800 hover:bg-red-900/50 text-zinc-400 hover:text-red-400 text-sm rounded-lg transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -511,6 +514,35 @@ export default function V3WorkbenchPage() {
             </div>
           )}
         </div>
+
+        {/* Delete confirmation modal */}
+        {deletingProjectId && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-sm mx-4 shadow-2xl">
+              <h3 className="text-lg font-semibold text-white mb-2">Delete Project?</h3>
+              <p className="text-sm text-zinc-400 mb-6">
+                This will remove the project from your list. Are you sure?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeletingProjectId(null)}
+                  className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    deleteProject(deletingProjectId);
+                    setDeletingProjectId(null);
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
