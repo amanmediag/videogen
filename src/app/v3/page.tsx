@@ -61,6 +61,11 @@ export default function V3WorkbenchPage() {
   const [draftDuration, setDraftDuration] = useState<"10" | "15">("15");
   const [showDraft, setShowDraft] = useState(false);
 
+  // Character creation form
+  const [charFormVideoId, setCharFormVideoId] = useState<string | null>(null);
+  const [charName, setCharName] = useState("");
+  const [charTimestamps, setCharTimestamps] = useState("1,4");
+
   const pollTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const charPollTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -317,14 +322,12 @@ export default function V3WorkbenchPage() {
     }
   }
 
-  async function createCharacterFromVideo(video: V3Video) {
+  async function createCharacterFromVideo(video: V3Video, name: string, timestamps: string) {
     if (!activeProject || !video.taskId || video.status !== "success") return;
-
-    const videoIndex = activeProject.videos.findIndex((v) => v.id === video.id) + 1;
-    const name = generateCharacterName(video.prompt, videoIndex);
 
     updateVideoLocal(video.id, { characterName: name, characterStatus: "creating", characterProgress: 0 });
     setShowCharacters(true);
+    setCharFormVideoId(null);
 
     try {
       const res = await fetch("/api/v2/create-character", {
@@ -334,7 +337,7 @@ export default function V3WorkbenchPage() {
           taskId: video.taskId,
           username: name,
           characterPrompt: video.prompt.slice(0, 200),
-          timestamps: "1,4",
+          timestamps,
         }),
       });
 
@@ -730,15 +733,60 @@ export default function V3WorkbenchPage() {
                   )}
 
                   {!previewVideo.characterName ? (
-                    <button
-                      onClick={() => createCharacterFromVideo(previewVideo)}
-                      className="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Create Character
-                    </button>
+                    charFormVideoId === previewVideo.id ? (
+                      <div className="space-y-2 p-3 bg-zinc-800/50 rounded-lg border border-purple-500/20">
+                        <div>
+                          <label className="text-xs text-zinc-400 mb-1 block">Character Name</label>
+                          <input
+                            type="text"
+                            value={charName}
+                            onChange={(e) => setCharName(e.target.value)}
+                            placeholder="e.g. AVATAR_0001"
+                            className="w-full px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-zinc-400 mb-1 block">Timestamps (seconds, e.g. &quot;1,4&quot;)</label>
+                          <input
+                            type="text"
+                            value={charTimestamps}
+                            onChange={(e) => setCharTimestamps(e.target.value)}
+                            placeholder="1,4"
+                            className="w-full px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setCharFormVideoId(null)}
+                            className="flex-1 px-3 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg text-sm transition-colors"
+                          >Cancel</button>
+                          <button
+                            onClick={() => {
+                              if (charName.trim()) {
+                                createCharacterFromVideo(previewVideo, charName.trim(), charTimestamps.trim() || "1,4");
+                              }
+                            }}
+                            disabled={!charName.trim()}
+                            className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+                          >Create</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          const videoIndex = activeProject.videos.findIndex((v) => v.id === previewVideo.id) + 1;
+                          setCharName(generateCharacterName(previewVideo.prompt, videoIndex));
+                          setCharTimestamps("1,4");
+                          setCharFormVideoId(previewVideo.id);
+                        }}
+                        className="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Create Character
+                      </button>
+                    )
                   ) : previewVideo.characterStatus === "fail" ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-red-400 text-sm">
