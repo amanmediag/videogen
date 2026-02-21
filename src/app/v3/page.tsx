@@ -60,44 +60,65 @@ function generateCharacterName(prompt: string, existingNames: string[]): string 
 }
 
 const MAX_JOBS = 5;
+const JOBS_KEY = "v3_jobs";
 const CHARACTERS_KEY = "v3_characters";
 
-function loadCharacters(): Character[] {
-  if (typeof window === "undefined") return [];
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const stored = localStorage.getItem(CHARACTERS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
   } catch {
-    return [];
+    return fallback;
   }
 }
 
-function saveCharacters(characters: Character[]) {
+function saveToStorage<T>(key: string, data: T) {
   try {
-    localStorage.setItem(CHARACTERS_KEY, JSON.stringify(characters));
+    localStorage.setItem(key, JSON.stringify(data));
   } catch {
     // ignore
   }
 }
 
+function loadJobs(): VideoJob[] {
+  const jobs = loadFromStorage<VideoJob[]>(JOBS_KEY, []);
+  // Reset "submitting" status to "idle" since the request was lost on refresh
+  return jobs.map((j) => j.status === "submitting" ? { ...j, status: "idle" as const } : j);
+}
+
+function saveJobs(jobs: VideoJob[]) {
+  saveToStorage(JOBS_KEY, jobs);
+}
+
+function loadCharacters(): Character[] {
+  return loadFromStorage<Character[]>(CHARACTERS_KEY, []);
+}
+
+function saveCharacters(characters: Character[]) {
+  saveToStorage(CHARACTERS_KEY, characters);
+}
+
 export default function V3WorkbenchPage() {
-  const [jobs, setJobs] = useState<VideoJob[]>(() => [createEmptyJob()]);
+  const [jobs, setJobs] = useState<VideoJob[]>(() => {
+    const loaded = loadJobs();
+    return loaded.length > 0 ? loaded : [createEmptyJob()];
+  });
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [showCharacters, setShowCharacters] = useState(false);
+  const [characters, setCharacters] = useState<Character[]>(() => loadCharacters());
+  const [showCharacters, setShowCharacters] = useState(() => loadCharacters().length > 0);
   const pollTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const charPollTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const hasResumedPolling = useRef(false);
 
-  // Load characters from localStorage on mount
+  // Save jobs to localStorage whenever they change
   useEffect(() => {
-    setCharacters(loadCharacters());
-  }, []);
+    saveJobs(jobs);
+  }, [jobs]);
 
-  // Save characters to localStorage when they change
+  // Save characters to localStorage whenever they change
   useEffect(() => {
-    if (characters.length > 0) {
-      saveCharacters(characters);
-    }
+    saveCharacters(characters);
   }, [characters]);
 
   // Cleanup all timers on unmount
@@ -110,11 +131,23 @@ export default function V3WorkbenchPage() {
     };
   }, []);
 
-  // Resume polling for in-progress characters on mount
+  // Resume polling for in-progress jobs and characters on mount
   useEffect(() => {
-    const loaded = loadCharacters();
-    loaded.forEach((char) => {
-      if (char.status === "waiting" || char.status === "queuing" || char.status === "generating") {
+    if (hasResumedPolling.current) return;
+    hasResumedPolling.current = true;
+
+    // Resume video job polling
+    const loadedJobs = loadJobs();
+    loadedJobs.forEach((job) => {
+      if (job.taskId && (job.status === "waiting" || job.status === "queuing" || job.status === "generating")) {
+        startPolling(job.id, job.taskId);
+      }
+    });
+
+    // Resume character polling
+    const loadedChars = loadCharacters();
+    loadedChars.forEach((char) => {
+      if (char.characterTaskId && (char.status === "waiting" || char.status === "queuing" || char.status === "generating")) {
         startCharacterPolling(char.id, char.characterTaskId);
       }
     });
