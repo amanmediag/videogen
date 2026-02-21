@@ -88,6 +88,35 @@ model Task {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
+model V3Project {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  videos    V3Video[]
+}
+
+model V3Video {
+  id                String   @id @default(cuid())
+  projectId         String
+  prompt            String
+  aspectRatio       String   @default("portrait")
+  duration          String   @default("15")
+  taskId            String?
+  status            String   @default("idle")
+  progress          Int      @default(0)
+  resultUrl         String?
+  localPath         String?
+  characterName     String?
+  characterTaskId   String?
+  characterStatus   String?
+  characterProgress Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  project V3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
 model V2Project {
   id                  String   @id @default(cuid())
   name                String
